@@ -13,30 +13,16 @@ namespace wwfSolver
     public partial class MainForm : Form
     {
         private TextBox[,] mGameTextBoxes = new TextBox[GameSolver.BOARD_SIZE, GameSolver.BOARD_SIZE];
+        private WordDict mWordDict;
 
         private const bool _useDemoInput = true;
-        private String _demoAvailableLetters = "ILAUAEI";
-        private String[,] _demoGameBoard = {
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "X"},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "C", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "Z", "O", "O", "N"},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "I", " ", "O", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", "B", " ", "P", "A", "L", "L"},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", "E", "M", " ", " ", " ", "A"},
-            {" ", " ", " ", " ", " ", " ", " ", "S", "N", "E", "E", "R", "S", " ", "R"},
-            {" ", " ", " ", " ", " ", " ", " ", "W", "E", "R", "E", " ", "I", "N", "K"},
-            {" ", " ", " ", " ", " ", " ", " ", "E", "T", " ", "D", " ", "T", "O", " "},
-            {" ", " ", " ", " ", " ", " ", "V", "A", "S", "E", " ", " ", "H", "E", "R"},
-            {" ", " ", " ", " ", " ", "B", " ", "T", " ", "V", " ", " ", " ", "L", "I"},
-            {" ", " ", " ", "T", "W", "I", "G", "S", " ", "E", "Y", "E", " ", " ", "D"},
-            {" ", " ", " ", "O", " ", "G", " ", " ", " ", "N", " ", " ", "F", "I", "E"},
-            {" ", " ", " ", "Y", " ", " ", " ", " ", " ", "T", "U", "X", " ", " ", " "}
-        };
 
         public MainForm()
         {
             InitializeComponent();
+            mAvailableLettersTxt.TextChanged += new EventHandler(OnGameBoardTextChanged);
+
+            mWordDict = new WordDict("res/wwfDict.txt");
 
             SetupGameBoard();
         }
@@ -94,7 +80,7 @@ namespace wwfSolver
 
         private void GoBtnOnClick(object sender, EventArgs e)
         {
-            String[,] boardLetters = new String[GameSolver.BOARD_SIZE, GameSolver.BOARD_SIZE];
+            char[,] boardLetters = new char[GameSolver.BOARD_SIZE, GameSolver.BOARD_SIZE];
             
             for (int i = 0; i < GameSolver.BOARD_SIZE; i++)
             {
@@ -106,13 +92,32 @@ namespace wwfSolver
                     {
                         letter = " ";
                     }
-                    boardLetters[i, j] = mGameTextBoxes[i, j].Text;
+                    boardLetters[i, j] = mGameTextBoxes[i, j].Text[0];
                 }
             }
 
-            String availableLetters = mAvailableLettersTxt.Text;
+            char[] availableLetters = mAvailableLettersTxt.Text.ToCharArray();
 
-            GameSolver solver = new GameSolver(boardLetters, availableLetters);
+            GameSolver solver = new GameSolver(mWordDict, boardLetters, availableLetters);
         }
-    }
+
+        private String _demoAvailableLetters = "ILAUAEI";
+        private String[,] _demoGameBoard = {
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "C", " "},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "Z", "O", "O", "N"},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "I", " ", "O", " "},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", "B", " ", "P", "A", "L", "L"},
+            {" ", " ", " ", " ", " ", " ", " ", " ", " ", "E", "M", " ", " ", " ", "A"},
+            {" ", " ", " ", " ", " ", " ", " ", "S", "N", "E", "E", "R", "S", " ", "R"},
+            {" ", " ", " ", " ", " ", " ", " ", "W", "E", "R", "E", " ", "I", "N", "K"},
+            {" ", " ", " ", " ", " ", " ", " ", "E", "T", " ", "D", " ", "T", "O", " "},
+            {" ", " ", " ", " ", " ", " ", "V", "A", "S", "E", " ", " ", "H", "E", "R"},
+            {" ", " ", " ", " ", " ", "B", " ", "T", " ", "V", " ", " ", " ", "L", "I"},
+            {" ", " ", " ", "T", "W", "I", "G", "S", " ", "E", "Y", "E", " ", " ", "D"},
+            {" ", " ", " ", "O", " ", "G", " ", " ", " ", "N", " ", " ", "F", "I", "E"},
+            {" ", " ", " ", "Y", " ", " ", " ", " ", " ", "T", "U", "X", " ", " ", " "}
+        };
+    }   
 }

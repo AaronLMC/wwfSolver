@@ -76,6 +76,7 @@
             // 
             this.mAvailableLettersTxt.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.mAvailableLettersTxt.Location = new System.Drawing.Point(12, 574);
+            this.mAvailableLettersTxt.MaxLength = 7;
             this.mAvailableLettersTxt.Name = "mAvailableLettersTxt";
             this.mAvailableLettersTxt.Size = new System.Drawing.Size(392, 32);
             this.mAvailableLettersTxt.TabIndex = 2;
