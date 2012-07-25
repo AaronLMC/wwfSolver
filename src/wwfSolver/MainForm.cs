@@ -100,6 +100,10 @@ namespace wwfSolver
             char[] availableLetters = mAvailableLettersTxt.Text.ToCharArray();
 
             GameSolver solver = new GameSolver(mWordDict, boardLetters, availableLetters);
+            SortedDictionary<int, LetterLoc[]> solutions = solver.GetSolutions();
+
+            int das = 5;
+            das++;
         }
 
         private String _demoAvailableLetters = "ILAUAEI";

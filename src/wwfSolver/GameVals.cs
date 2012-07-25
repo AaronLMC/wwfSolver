@@ -43,29 +43,29 @@ namespace wwfSolver
         public enum Bonus
         {
             NONE,
-            DOUBLE_LETTER,
-            TRIPLE_LETTER,
-            DOUBLE_WORD,
-            TRIPLE_WORD
+            D_LT,
+            T_LT,
+            D_WD,
+            T_WD
         }
 
         public static readonly Bonus[,] BONUS_TILES = new Bonus[,]
         {
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
-            {{Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}, {Bonus.NONE}},
+            {Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE},
+            {Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE},
+            {Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE},
+            {Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.T_WD},
+            {Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE},
+            {Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE},
+            {Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT},
+            {Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE},
+            {Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT},
+            {Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE},
+            {Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE},
+            {Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.T_WD},
+            {Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE},
+            {Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.D_WD, Bonus.NONE, Bonus.NONE, Bonus.D_LT, Bonus.NONE, Bonus.NONE},
+            {Bonus.NONE, Bonus.NONE, Bonus.NONE, Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.T_LT, Bonus.NONE, Bonus.NONE, Bonus.T_WD, Bonus.NONE, Bonus.NONE, Bonus.NONE},
         };
     }
 }
