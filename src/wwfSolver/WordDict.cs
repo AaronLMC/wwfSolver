@@ -22,7 +22,7 @@ namespace wwfSolver
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
-                    string word = line.Trim();
+                    string word = line.Trim().ToUpper();
                     int length = word.Length;
                     if (length == 0)
                     {

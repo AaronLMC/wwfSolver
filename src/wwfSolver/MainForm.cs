@@ -100,17 +100,22 @@ namespace wwfSolver
             char[] availableLetters = mAvailableLettersTxt.Text.ToCharArray();
 
             GameSolver solver = new GameSolver(mWordDict, boardLetters, availableLetters);
-            SortedDictionary<int, LetterLoc[]> solutions = solver.GetSolutions();
+            List<WordSolution> solutions = solver.GetSolutions();
+
+            foreach (WordSolution solution in solutions)
+            {
+                Console.Out.WriteLine("Solution: " + solution);
+            }
 
             int das = 5;
             das++;
         }
 
-        private String _demoAvailableLetters = "ILAUAEI";
+        private String _demoAvailableLetters = "TLAUAEI";
         private String[,] _demoGameBoard = {
+            {" ", "E", "S", "T", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
             {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "C", " "},
+            {" ", " ", "O", "S", "T", " ", " ", " ", " ", " ", " ", " ", " ", "C", " "},
             {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "Z", "O", "O", "N"},
             {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "I", " ", "O", " "},
             {" ", " ", " ", " ", " ", " ", " ", " ", " ", "B", " ", "P", "A", "L", "L"},
