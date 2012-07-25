@@ -9,7 +9,7 @@ namespace wwfSolver
 {
     public class GameSolver
     {
-        public const int BOARD_SIZE = 15;
+        
 
         private WordDict mWordDict;
         private char[,] mBoardLetters;
@@ -17,10 +17,9 @@ namespace wwfSolver
         private List<int> mUsedLetterIdxs = new List<int>();
         private List<LetterLoc> mCurrentWord = new List<LetterLoc>();
 
-        private readonly Dictionary<char, int> LETTER_VALS = new Dictionary<char, int>()
-        {
-            {'A', 1}
-        };
+        
+        
+        
 
         public GameSolver(WordDict wordDict, char[,] boardLetters, char[] availableLetters)
         {
@@ -31,16 +30,16 @@ namespace wwfSolver
 
         public List<WordSolution> GetSolutions()
         {
-            for (int i = 0; i < BOARD_SIZE; i++)
+            for (int i = 0; i < GameVals.BOARD_SIZE; i++)
             {
-                for (int j = 0; j < BOARD_SIZE; j++)
+                for (int j = 0; j < GameVals.BOARD_SIZE; j++)
                 {
                     if (!IsLegalLocation(i, j))
                     {
                         continue;
                     }
 
-                    for (int letterIdx = 0; letterIdx < 7; letterIdx++)
+                    for (int letterIdx = 0; letterIdx < GameVals.AVAILABLE_LETTER_MAX; letterIdx++)
                     {
                         if (mUsedLetterIdxs.Contains(letterIdx))
                         {

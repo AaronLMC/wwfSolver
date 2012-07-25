@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameSolver.cs" />
+    <Compile Include="GameVals.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

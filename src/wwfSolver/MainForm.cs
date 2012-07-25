@@ -12,7 +12,7 @@ namespace wwfSolver
 {
     public partial class MainForm : Form
     {
-        private TextBox[,] mGameTextBoxes = new TextBox[GameSolver.BOARD_SIZE, GameSolver.BOARD_SIZE];
+        private TextBox[,] mGameTextBoxes = new TextBox[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
         private WordDict mWordDict;
 
         private const bool _useDemoInput = true;
@@ -20,6 +20,7 @@ namespace wwfSolver
         public MainForm()
         {
             InitializeComponent();
+            mAvailableLettersTxt.MaxLength = GameVals.AVAILABLE_LETTER_MAX;
             mAvailableLettersTxt.TextChanged += new EventHandler(OnGameBoardTextChanged);
 
             mWordDict = new WordDict("res/wwfDict.txt");
@@ -34,12 +35,12 @@ namespace wwfSolver
                 mAvailableLettersTxt.Text = _demoAvailableLetters;
             }
 
-            for (int i = 0; i < GameSolver.BOARD_SIZE; i++)
+            for (int i = 0; i < GameVals.BOARD_SIZE; i++)
             {
                 FlowLayoutPanel rowPanel = new FlowLayoutPanel();
                 rowPanel.Width = mGameBoardLayout.Width;
-                
-                for (int j = 0; j < GameSolver.BOARD_SIZE; j++)
+
+                for (int j = 0; j < GameVals.BOARD_SIZE; j++)
                 {
                     TextBox textBox = new TextBox();
                     textBox.Font = new Font(FontFamily.GenericSansSerif, 12);
@@ -80,11 +81,11 @@ namespace wwfSolver
 
         private void GoBtnOnClick(object sender, EventArgs e)
         {
-            char[,] boardLetters = new char[GameSolver.BOARD_SIZE, GameSolver.BOARD_SIZE];
-            
-            for (int i = 0; i < GameSolver.BOARD_SIZE; i++)
+            char[,] boardLetters = new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
+
+            for (int i = 0; i < GameVals.BOARD_SIZE; i++)
             {
-                for (int j = 0; j < GameSolver.BOARD_SIZE; j++)
+                for (int j = 0; j < GameVals.BOARD_SIZE; j++)
                 {
                     Trace.Assert(mGameTextBoxes[i, j].Text != null, "Text box in game is null");
                     String letter = mGameTextBoxes[i, j].Text;
