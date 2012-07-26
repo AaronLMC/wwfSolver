@@ -37,126 +37,234 @@ namespace wwfSolver
                         continue;
                     }
 
-                    //evaluate legality of placing a letter here
-                    mBoardLetters[i, j] = 'X';
-                    bool legalMove = IsLegalMove(i, j);
-                    mBoardLetters[i, j] = ' ';
-                    if (!legalMove)
+                    //evaluate legality of placing an initial letter here
+                    if (!IsLegalMove(i, j))
                     {
                         continue;
                     }
 
-                    for (int letterIdx = 0; letterIdx < mAvailableLetters.Length; letterIdx++)
+                    List<WordSolution> words = SolutionSearch(i, j);
+                    solutions.AddRange(words);
+
+                    foreach (WordSolution w in words)
                     {
-                        if (mUsedLetterIdxs.Contains(letterIdx))
-                        {
-                            continue;
-                        }
-
-                        //we have a letter and a location to try out
-                        char letter = mAvailableLetters.ElementAt(letterIdx);
-                        mBoardLetters[i, j] = letter;
-
-                        LetterLoc curLetterLoc = new LetterLoc(letter, i, j);
-                        mCurrentWord.Add(curLetterLoc);
-                        mUsedLetterIdxs.Add(letterIdx);
-
-                        //get score of current turn
-                        List<WordLocation> wordList = GetWordList();
-                        List<WordLocation> illegalWords;
-                        int score = GetWordScore(wordList, out illegalWords);
-                        if (score > 0)
-                        {
-                            //store this move as one that has scores
-                            LetterLoc[] letterArr = new LetterLoc[mCurrentWord.Count];
-                            mCurrentWord.CopyTo(letterArr);
-                            WordSolution solution = new WordSolution(letterArr, legalWords, score);
-                            solutions.Add(solution);
-                        }
-
-                        //see if we should continue down this path
-                        bool shouldContinue;
-                        if (score < 0)
-                        {
-                                
-                        }
+                        Console.Out.WriteLine("Found: " + w);
                     }
-
                 }
             }
 
             return solutions;
         }
 
-        //public List<WordSolution> GetSolutionsSimple()
-        //{
-        //    List<WordSolution> solutions = new List<WordSolution>();
-        //    for (int i = 0; i < GameVals.BOARD_SIZE; i++)
-        //    {
-        //        for (int j = 0; j < GameVals.BOARD_SIZE; j++)
-        //        {
-        //            if (LocationContainsLetter(i, j))
-        //            {
-        //                continue;
-        //            }
+        private List<WordSolution> SolutionSearch(int x, int y)
+        {
+            Trace.Assert(IsLegalMove(x, y), "Given board coordinates are not a legal move");
 
-        //            for (int letterIdx = 0; letterIdx < GameVals.AVAILABLE_LETTER_MAX; letterIdx++)
-        //            {
-        //                if (mUsedLetterIdxs.Contains(letterIdx))
-        //                {
-        //                    continue;
-        //                }
+            List<WordSolution> solutions = new List<WordSolution>();
+            
+            //cycle through all starting idx so that we exercise all letter combinations
+            for (int firstIdx = 0; firstIdx < mAvailableLetters.Length; firstIdx++)
+            {
+                int letterIdx = firstIdx - 1;
+                for (int evaluatedLetters = 0; evaluatedLetters < mAvailableLetters.Length; evaluatedLetters++)
+                {
+                    letterIdx++;
+                    if (letterIdx == mAvailableLetters.Length)
+                    {
+                        letterIdx = 0;
+                    }
 
-        //                //we have a letter and a location to try out
-        //                char letter = mAvailableLetters.ElementAt(letterIdx);
-        //                mBoardLetters[i, j] = letter;
-                        
-        //                //evaluate legality of move
-        //                if (!IsLegalMove(i, j))
-        //                {
-        //                    mBoardLetters[i, j] = ' ';
-        //                    continue;
-        //                }
+                    if (mUsedLetterIdxs.Contains(letterIdx))
+                    {
+                        continue;
+                    }
 
-        //                LetterLoc curLetterLoc = new LetterLoc(letter, i, j);
-                        
-        //                mCurrentWord.Add(curLetterLoc);                        
-        //                mUsedLetterIdxs.Add(letterIdx);
+                    //we have a letter and a location to try out
+                    char letter = mAvailableLetters.ElementAt(letterIdx);
+                    mBoardLetters[x, y] = letter;
 
-        //                string illegalWord;
-        //                List<WordLocation> wordList = GetWordList();
-        //                int score = GetWordScore(wordList, out illegalWords);
-        //                if (score < 0)
-        //                {
-        //                    Console.Out.WriteLine("Illegal word: " + illegalWord);
+                    LetterLoc curLetterLoc = new LetterLoc(letter, x, y);
+                    mCurrentWord.Add(curLetterLoc);
+                    mUsedLetterIdxs.Add(letterIdx);
 
-        //                    //remove letter from board
-        //                    mBoardLetters[i, j] = ' ';
-        //                    mUsedLetterIdxs.Remove(letterIdx);
-        //                    mCurrentWord.Remove(curLetterLoc);
-        //                }
-        //                else
-        //                {
-        //                    LetterLoc[] letterArr = new LetterLoc[mCurrentWord.Count];
-        //                    mCurrentWord.CopyTo(letterArr);
+                    //get score of current turn
+                    WordSet wordSet = GetWordList();
+                    List<WordLocation> wordList = wordSet.GetFullList();
+                    List<WordLocation> illegalWords;
+                    int score = GetWordScore(wordList, out illegalWords);
+                    if (score > 0)
+                    {
+                        //store this move as one that has scores
+                        LetterLoc[] letterArr = new LetterLoc[mCurrentWord.Count];
+                        mCurrentWord.CopyTo(letterArr);
+                        WordSolution solution = new WordSolution(letterArr, wordList, score);
+                        solutions.Add(solution);
+                    }
 
-        //                    WordSolution solution = new WordSolution(letterArr, legalWords, score);
-        //                    solutions.Add(solution);
-        //                }
-        //             }
-        //        }
-        //    }
+                    //see if we should continue down this path
+                    if (score < 0
+                        && wordSet.PrimaryWord != null
+                        && !illegalWords.Contains(wordSet.PrimaryWord))
+                    {
+                        //an incidental word is illegal.  Adding new tiles won't help with this so we are done
+                        continue;
+                    }
+                    else if (wordSet.PrimaryWord != null
+                        && mWordDict.GetWordsThatContain(wordSet.PrimaryWord.WordText).Count == 0)
+                    {
+                        //there are no words that contain our primary word, so stop
+                        continue;
+                    }
+                    //else if (false)
+                    //{
+                    //    //TODO: evaluate possible words for available tiles and board pieces
+                    //}
 
-        //    return solutions;
-        //}
+
+                    //Look for next word
+                    if (wordSet.Orientation == WordOrientation.SINGLE_TILE)
+                    {
+                        //go in all 4 directions
+
+                        int y_next = NextTileUp(x, y);
+                        if (y_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x, y_next);
+                            solutions.AddRange(words);
+                        }
+
+                        y_next = NextTileDown(x, y);
+                        if (y_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x, y_next);
+                            solutions.AddRange(words);
+                        }
+
+                        int x_next = NextTileLeft(x, y);
+                        if (x_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x_next, y);
+                            solutions.AddRange(words);
+                        }
+
+                        x_next = NextTileRight(x, y);
+                        if (x_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x_next, y);
+                            solutions.AddRange(words);
+                        }
+                    }
+                    else if (wordSet.Orientation == WordOrientation.HORIZONTAL)
+                    {
+                        //go top and bottom
+                        int y_next = NextTileUp(x, y);
+                        if (y_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x, y_next);
+                            solutions.AddRange(words);
+                        }
+
+                        y_next = NextTileDown(x, y);
+                        if (y_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x, y_next);
+                            solutions.AddRange(words);
+                        }
+                    }
+                    else
+                    {
+                        //go left and right
+                        int x_next = NextTileLeft(x, y);
+                        if (x_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x_next, y);
+                            solutions.AddRange(words);
+                        }
+
+                        x_next = NextTileRight(x, y);
+                        if (x_next >= 0)
+                        {
+                            List<WordSolution> words = SolutionSearch(x_next, y);
+                            solutions.AddRange(words);
+                        }
+                    }
+
+                    //clear the location we are looking at
+                    mBoardLetters[x, y] = ' ';
+                    mUsedLetterIdxs.RemoveAt(mUsedLetterIdxs.Count - 1);
+                    mCurrentWord.Remove(curLetterLoc);
+                }
+
+            }
+
+            
+
+            return solutions;
+        }
+
+        private int NextTileUp(int x, int y)
+        {
+            int y_next = -1;
+            for (int j = y; j >= 0; j--)
+            {
+                if (IsLegalMove(x, j))
+                {
+                    y_next = j;
+                    break;
+                }
+            }
+            return y_next;
+        }
+
+        private int NextTileDown(int x, int y)
+        {
+            int y_next = -1;
+            for (int j = y; j < GameVals.BOARD_SIZE; j++)
+            {
+                if (IsLegalMove(x, j))
+                {
+                    y_next = j;
+                    break;
+                }
+            }
+            return y_next;
+        }
+
+        private int NextTileLeft(int x, int y)
+        {
+            int x_next = -1;
+            for (int i = x; i >= 0; i--)
+            {
+                if (IsLegalMove(i, y))
+                {
+                    x_next = i;
+                    break;
+                }
+            }
+            return x_next;
+        }
+
+        private int NextTileRight(int x, int y)
+        {
+            int x_next = -1;
+            for (int i = x; i < GameVals.BOARD_SIZE; i++)
+            {
+                if (IsLegalMove(i, y))
+                {
+                    x_next = i;
+                    break;
+                }
+            }
+            return x_next;
+        }
 
         private int GetWordScore(List<WordLocation> wordList, out List<WordLocation> illegalWords)
         {
-            illegalWord = new List<WordLocation>();
+            illegalWords = new List<WordLocation>();
             int score = 0;
 
             //first check for illegal words
-            foreach (WordLocation word in legalWords)
+            foreach (WordLocation word in wordList)
             {                
                 if (!mWordDict.IsWordInList(word.WordText))
                 {
@@ -203,24 +311,25 @@ namespace wwfSolver
             return score;
         }
 
-        enum WordOrientation
-        {
-            NONE,
-            VERTICAL,
-            HORIZONTAL
-        }
-
         private WordSet GetWordList()
-        {
-            WordSet wordSet = new WordSet();
-
+        { 
             //determine orientation of played tiles
-            bool vertical;
+            WordOrientation orientation;
             int lastWordIdx = mCurrentWord.Count - 1;
             int startX = mCurrentWord[0].X;
             int startY = mCurrentWord[0].Y;
             int endX = mCurrentWord[lastWordIdx].X;
             int endY = mCurrentWord[lastWordIdx].Y;
+
+            if (mCurrentWord.Count == 1)
+                orientation = WordOrientation.SINGLE_TILE;
+            else if (startX != endX)
+                orientation = WordOrientation.VERTICAL;
+            else
+                orientation = WordOrientation.HORIZONTAL;
+            
+            //Initialize word set
+            WordSet wordSet = new WordSet(orientation);
 
             //for each letter in the proposed word, add the score of any new words generated by that letter
             foreach (LetterLoc letter in mCurrentWord)
@@ -268,7 +377,11 @@ namespace wwfSolver
                     {
                         letters.Add(new LetterLoc(mBoardLetters[i, letter.Y], i, letter.Y));
                     }
-                    wordList.Add(new WordLocation(letters));
+
+                    if (orientation == WordOrientation.VERTICAL)
+                        wordSet.PrimaryWord = new WordLocation(letters);
+                    else
+                        wordSet.AddIncidentalWord(new WordLocation(letters));
                 }
 
                 //evaluate in Y direction
@@ -308,7 +421,11 @@ namespace wwfSolver
                     {
                         letters.Add(new LetterLoc(mBoardLetters[letter.X, j], letter.X, j));
                     }
-                    wordList.Add(new WordLocation(letters));
+
+                    if (orientation == WordOrientation.HORIZONTAL)
+                        wordSet.PrimaryWord = new WordLocation(letters);
+                    else
+                        wordSet.AddIncidentalWord(new WordLocation(letters));
                 }
             }
 
@@ -317,6 +434,11 @@ namespace wwfSolver
 
         private bool IsLegalMove(int x, int y)
         {
+            if (LocationContainsLetter(x, y))
+            {
+                return false;
+            }
+
             //look at whether location is in-line with current word
             if (mCurrentWord.Count > 0)
             {
@@ -324,7 +446,7 @@ namespace wwfSolver
                 int initY = mCurrentWord[0].Y;
 
                 //location is not in line with existing current word
-                if (x != initX || y != initY)
+                if (x != initX && y != initY)
                 {
                     return false;
                 }
@@ -457,12 +579,20 @@ namespace wwfSolver
         #endregion
     }
 
+    public enum WordOrientation
+    {
+        SINGLE_TILE,
+        VERTICAL,
+        HORIZONTAL
+    }
+
     public class WordSet
     {
-        private WordLocation mPrimaryWord;
+        private WordLocation mPrimaryWord = null;
         private List<WordLocation> mIncidentalWords;
+        private WordOrientation mOrientation;
 
-        public WordSet()
+        public WordSet(WordOrientation orientation)
         {
             mIncidentalWords = new List<WordLocation>();
         }
@@ -471,6 +601,11 @@ namespace wwfSolver
         {
             get { return mPrimaryWord; }
             set { mPrimaryWord = value; }
+        }
+
+        public WordOrientation Orientation
+        {
+            get { return mOrientation; }
         }
 
         public List<WordLocation> IncidentalWords
@@ -482,8 +617,21 @@ namespace wwfSolver
         {
             mIncidentalWords.Add(word);
         }
+
+        public List<WordLocation> GetFullList()
+        {
+            List<WordLocation> fullSet = new List<WordLocation>();
+
+            if (mPrimaryWord != null)
+            {
+                fullSet.Add(mPrimaryWord);
+            }
+            fullSet.AddRange(mIncidentalWords);
+            return fullSet;
+        }
     }
 
+    [DebuggerDisplay("{ToString()}")]
     public class WordLocation
     {
         private LetterLoc[] mLetters;
@@ -509,6 +657,11 @@ namespace wwfSolver
         public LetterLoc[] Letters
         {
             get {return mLetters; }
+        }
+
+        public override string ToString()
+        {
+            return mWordText;
         }
     }
 
