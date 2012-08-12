@@ -9,6 +9,7 @@ namespace wwfSolver
     {
         public const int BOARD_SIZE = 15;
         public const int AVAILABLE_LETTER_MAX = 7;
+        public const int BOARD_CENTER_LOC = 7;
 
         public static readonly Dictionary<char, int> LETTER_SCORE = new Dictionary<char, int>()
         {

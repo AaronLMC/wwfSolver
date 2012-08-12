@@ -9,6 +9,9 @@ namespace wwfSolver
 {
     public class WordDict
     {
+        private HashSet<string> mLiveWords = new HashSet<string>();
+        private HashSet<string> mDeadWords = new HashSet<string>();
+     
         //{word length, word list}
         private Dictionary<int,HashSet<string>> mWordList = new Dictionary<int,HashSet<string>>();
         private int mMaxWordLength = 0;
@@ -71,11 +74,20 @@ namespace wwfSolver
         }
 
         /// <summary>
-        /// Does not return given word even if it is in the list
+        /// Returns true if given word cannot be built into a longer word in the dictionary
         /// </summary>
-        public List<string> GetWordsThatContain(string testWord)
+        public bool IsDeadWord(string testWord)
         {
-            List<string> candidates = new List<string>();
+            HashSet<string> candidates = new HashSet<string>();
+
+            if (mDeadWords.Contains(testWord))
+            {
+                return true;
+            }
+            else if (mLiveWords.Contains(testWord))
+            {
+                return false;
+            }
 
             for (int i = testWord.Length + 1; i <= mMaxWordLength; i++)
             {
@@ -86,13 +98,16 @@ namespace wwfSolver
                     {
                         if (word.Contains(testWord))
                         {
-                            candidates.Add(word);
+                            mLiveWords.Add(testWord);
+                            return false;
                         }
                     }
                 }
             }
 
-            return candidates;
+            //Keep record of words that have dead ends
+            mDeadWords.Add(testWord);
+            return true;
         }
     }
 }
