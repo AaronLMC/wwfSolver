@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Threading;
 
 namespace wwfSolver
 {
@@ -48,6 +49,14 @@ namespace wwfSolver
                     textBox.MaxLength = 1;
                     textBox.TextAlign = HorizontalAlignment.Center;
                     textBox.TextChanged += new EventHandler(OnGameBoardTextChanged);
+                    textBox.KeyUp += new KeyEventHandler(textBox_KeyUp);
+                    textBox.Tag = new int[] { i, j };
+
+                    if (i == GameVals.BOARD_CENTER_LOC
+                        && j == GameVals.BOARD_CENTER_LOC)
+                    {
+                        textBox.BackColor = Color.LightBlue;
+                    }
 
                     mGameTextBoxes[i,j] = textBox;
                     rowPanel.Controls.Add(textBox);
@@ -62,6 +71,67 @@ namespace wwfSolver
 
                 mGameBoardLayout.Controls.Add(rowPanel);
             }
+        }
+
+        private void textBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            
+                if (sender is TextBox
+                    && ((TextBox)sender).Tag is int[])
+                {
+                    if (e.KeyCode == Keys.Up
+                    || e.KeyCode == Keys.Down
+                    || e.KeyCode == Keys.Left
+                    || e.KeyCode == Keys.Right)
+                    {
+                        TextBox txtBox = sender as TextBox;
+                        int[] location = txtBox.Tag as int[];
+                        if (location.Length != 2)
+                        {
+                            Trace.Fail("Textbox did not have tag coordinates");
+                            return;
+                        }
+                        int x = location[0];
+                        int y = location[1];
+
+                        TextBox selectedBox = null;
+
+                        if (e.KeyCode == Keys.Up)
+                        {
+                            if (x > 0)
+                            {
+                                selectedBox = mGameTextBoxes[x - 1, y];
+                            }
+                        }
+                        else if (e.KeyCode == Keys.Down)
+                        {
+                            if (x < GameVals.BOARD_SIZE - 1)
+                            {
+                                selectedBox = mGameTextBoxes[x + 1, y];
+                            }
+                        }
+                        else if (e.KeyCode == Keys.Left)
+                        {
+                            if (y > 0)
+                            {
+                                selectedBox = mGameTextBoxes[x, y - 1];
+                            }
+                        }
+                        else if (e.KeyCode == Keys.Right)
+                        {
+                            if (y < GameVals.BOARD_SIZE - 1)
+                            {
+                                selectedBox = mGameTextBoxes[x, y + 1];
+                            }
+                        }
+
+                        if (selectedBox != null)
+                        {
+                            selectedBox.Focus();
+                            selectedBox.SelectAll();
+                        }
+                    }
+                }
         }
 
         private void OnGameBoardTextChanged(object sender, EventArgs e)
@@ -81,6 +151,14 @@ namespace wwfSolver
 
         private void GoBtnOnClick(object sender, EventArgs e)
         {
+            SetGoBtnEnabled(false);
+
+            Thread goThread = new Thread(ProcessGoClick);
+            goThread.Start();            
+        }
+
+        private void ProcessGoClick()
+        {
             char[,] boardLetters = new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
 
             for (int i = 0; i < GameVals.BOARD_SIZE; i++)
@@ -93,7 +171,7 @@ namespace wwfSolver
                     {
                         letter = " ";
                     }
-                    boardLetters[i, j] = mGameTextBoxes[i, j].Text[0];
+                    boardLetters[i, j] = letter[0];
                 }
             }
 
@@ -108,8 +186,23 @@ namespace wwfSolver
                 Console.Out.WriteLine("Solution: " + solution);
             }
 
-            int das = 5;
-            das++;
+            SetGoBtnEnabled(true);
+        }
+
+        private void SetGoBtnEnabled(bool enabled)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetGoBtnEnabled(enabled);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mGoBtn.Enabled = enabled;
+            }
         }
 
         private String _demoAvailableLetters = "";
@@ -193,19 +286,17 @@ namespace wwfSolver
         public void SetSearchStartLocation(int x, int y)
         {
             SetLocationColor(x, y, Color.Red);
-            Update();
+            
         }
 
         public void SetSearchRecurLocation(int x, int y)
         {
             SetLocationColor(x, y, Color.Yellow);
-            Update();
         }
 
         public void ClearSearchLocation(int x, int y)
         {
             SetLocationColor(x, y, Color.White);
-            Update();
         }
 
         private void SetLocationColor(int x, int y, Color color)
@@ -221,6 +312,7 @@ namespace wwfSolver
             else
             {
                 mGameTextBoxes[x, y].BackColor = color;
+                Update();
             }
         }
 

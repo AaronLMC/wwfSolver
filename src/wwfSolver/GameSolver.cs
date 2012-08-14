@@ -88,7 +88,7 @@ namespace wwfSolver
                             continue;
                         }
 
-                        mFrontEnd.SetSearchStartLocation(i, j);
+                        mFrontEnd.SetSearchStartLocation(i, j);                        
                         List<WordSolution> words = SolutionSearch(i, j, 0);
                         mFrontEnd.ClearSearchLocation(i, j);
 
@@ -372,6 +372,11 @@ namespace wwfSolver
                 wordScore *= multipliers;
 
                 score += wordScore;
+            }
+
+            if (playedTiles.Count == 7)
+            {
+                score += GameVals.BONUS_USED_ALL_TILES;
             }
 
             return score;
