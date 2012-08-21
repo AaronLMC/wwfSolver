@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Board.cs" />
     <Compile Include="GameSolver.cs" />
     <Compile Include="GameVals.cs" />
     <Compile Include="MainForm.cs">

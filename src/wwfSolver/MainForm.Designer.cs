@@ -30,17 +30,22 @@
         {
             this.mMainMenu = new System.Windows.Forms.MenuStrip();
             this.mFileMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.mSaveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mLoadMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mExitMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.mGameBoardLayout = new System.Windows.Forms.FlowLayoutPanel();
             this.mAvailableLettersTxt = new System.Windows.Forms.TextBox();
             this.mGoBtn = new System.Windows.Forms.Button();
+            this.boardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mClearMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mMainMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // mMainMenu
             // 
             this.mMainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.mFileMenu});
+            this.mFileMenu,
+            this.boardToolStripMenuItem});
             this.mMainMenu.Location = new System.Drawing.Point(0, 0);
             this.mMainMenu.Name = "mMainMenu";
             this.mMainMenu.Size = new System.Drawing.Size(611, 24);
@@ -50,15 +55,31 @@
             // mFileMenu
             // 
             this.mFileMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mSaveMenuItem,
+            this.mLoadMenuItem,
             this.mExitMenu});
             this.mFileMenu.Name = "mFileMenu";
-            this.mFileMenu.Size = new System.Drawing.Size(35, 20);
+            this.mFileMenu.Size = new System.Drawing.Size(37, 20);
             this.mFileMenu.Text = "&File";
+            // 
+            // mSaveMenuItem
+            // 
+            this.mSaveMenuItem.Name = "mSaveMenuItem";
+            this.mSaveMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.mSaveMenuItem.Text = "&Save";
+            this.mSaveMenuItem.Click += new System.EventHandler(this.SaveMenuItemOnClick);
+            // 
+            // mLoadMenuItem
+            // 
+            this.mLoadMenuItem.Name = "mLoadMenuItem";
+            this.mLoadMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.mLoadMenuItem.Text = "&Load";
+            this.mLoadMenuItem.Click += new System.EventHandler(this.LoadMenuItemOnClick);
             // 
             // mExitMenu
             // 
             this.mExitMenu.Name = "mExitMenu";
-            this.mExitMenu.Size = new System.Drawing.Size(92, 22);
+            this.mExitMenu.Size = new System.Drawing.Size(152, 22);
             this.mExitMenu.Text = "&Exit";
             this.mExitMenu.Click += new System.EventHandler(this.ExitMenuOnClick);
             // 
@@ -91,6 +112,21 @@
             this.mGoBtn.UseVisualStyleBackColor = true;
             this.mGoBtn.Click += new System.EventHandler(this.GoBtnOnClick);
             // 
+            // boardToolStripMenuItem
+            // 
+            this.boardToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mClearMenuItem});
+            this.boardToolStripMenuItem.Name = "boardToolStripMenuItem";
+            this.boardToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
+            this.boardToolStripMenuItem.Text = "&Board";
+            // 
+            // mClearMenuItem
+            // 
+            this.mClearMenuItem.Name = "mClearMenuItem";
+            this.mClearMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.mClearMenuItem.Text = "&Clear";
+            this.mClearMenuItem.Click += new System.EventHandler(this.ClearMenuItemOnClick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -118,6 +154,10 @@
         private System.Windows.Forms.FlowLayoutPanel mGameBoardLayout;
         private System.Windows.Forms.TextBox mAvailableLettersTxt;
         private System.Windows.Forms.Button mGoBtn;
+        private System.Windows.Forms.ToolStripMenuItem mSaveMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mLoadMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem boardToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mClearMenuItem;
     }
 }
 

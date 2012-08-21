@@ -26,12 +26,12 @@ namespace wwfSolver
         private List<int> mUsedLetterIdxs = new List<int>();
         private List<LetterLoc> mCurrentWord = new List<LetterLoc>();
 
-        public GameSolver(FrontEndInterface frontEnd, WordDict wordDict, char[,] boardLetters, char[] availableLetters)
+        public GameSolver(FrontEndInterface frontEnd, WordDict wordDict, Board boardConfig)
         {
             mFrontEnd = frontEnd;
             mWordDict = wordDict;
-            mBoardLetters = boardLetters;
-            mAvailableLetters = availableLetters;
+            mBoardLetters = boardConfig.BoardLetters;
+            mAvailableLetters = boardConfig.AvailableLetters;
         }
 
         public List<WordSolution> GetSolutions()
@@ -125,122 +125,141 @@ namespace wwfSolver
 
                 //we have a letter and a location to try out
                 char letter = mAvailableLetters.ElementAt(letterIdx);
-                mBoardLetters[x, y] = letter;
 
-                LetterLoc curLetterLoc = new LetterLoc(letter, x, y);
-                mCurrentWord.Add(curLetterLoc);
-                mUsedLetterIdxs.Add(letterIdx);
-                
-                //get score of current turn
-                WordSet wordSet = GetWordList();
-                List<WordLocation> wordList = wordSet.GetFullList();
-                HashSet<WordLocation> illegalWords;
-                int score = GetWordScore(wordList, mCurrentWord, out illegalWords);
-                if (score > 0)
+                if (letter == GameVals.BLANK_TILE)
                 {
-                    //store this move as one that has scores
-                    LetterLoc[] letterArr = new LetterLoc[mCurrentWord.Count];
-                    mCurrentWord.CopyTo(letterArr);
-                    WordSolution solution = new WordSolution(letterArr, wordList, score);
-                    solutions.Add(solution);
-                }
-
-                //see if we should continue down this path
-                if (score < 0
-                    && AreIncidentalWordsIllegal(illegalWords, wordSet))
-                {
-                    //an incidental word is illegal.  Adding new tiles won't help with this so we are done
-                    clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
-                    continue;
-                }
-                else if (wordSet.PrimaryWord != null
-                    && mWordDict.IsDeadWord(wordSet.PrimaryWord.WordText))
-                {
-                    //there are no words that contain our primary word, so stop
-                    clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
-                    continue;
-                }
-                //else if (false)
-                //{
-                //    //TODO: evaluate possible words for available tiles and board pieces
-                //}
-
-
-                //Look for next word
-                if (wordSet.Orientation == WordOrientation.SINGLE_TILE)
-                {
-                    //go in all 4 directions
-
-                    int y_next = NextTileUp(x, y);
-                    if (y_next >= 0)
+                    //If tile is blank, cycle through all letters
+                    for (int i = 0; i < GameVals.ALPHABET.Length; i++)
                     {
-                        List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
-                        solutions.AddRange(words);
-                    }
-
-                    y_next = NextTileDown(x, y);
-                    if (y_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
-                        solutions.AddRange(words);
-                    }
-
-                    int x_next = NextTileLeft(x, y);
-                    if (x_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
-                        solutions.AddRange(words);
-                    }
-
-                    x_next = NextTileRight(x, y);
-                    if (x_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
-                        solutions.AddRange(words);
-                    }
-                }
-                else if (wordSet.Orientation == WordOrientation.HORIZONTAL)
-                {
-                    //go top and bottom
-                    int y_next = NextTileUp(x, y);
-                    if (y_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
-                        solutions.AddRange(words);
-                    }
-
-                    y_next = NextTileDown(x, y);
-                    if (y_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
-                        solutions.AddRange(words);
+                        char blankLetter = GameVals.ALPHABET[i];
+                        _evaluateLetter(blankLetter, true, letterIdx, x, y, solutions, depth);
                     }
                 }
                 else
                 {
-                    //go left and right
-                    int x_next = NextTileLeft(x, y);
-                    if (x_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
-                        solutions.AddRange(words);
-                    }
-
-                    x_next = NextTileRight(x, y);
-                    if (x_next >= 0)
-                    {
-                        List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
-                        solutions.AddRange(words);
-                    }
+                    _evaluateLetter(letter, false, letterIdx, x, y, solutions, depth);
                 }
 
-                //clear the location we are looking at
-                clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
             }
 
             mFrontEnd.ClearSearchLocation(x, y);
 
             return solutions;
+        }
+
+        private void _evaluateLetter(char letter, bool isBlankLetter, int letterIdx, int x, int y, List<WordSolution> solutions, int depth)
+        {
+            mBoardLetters[x, y] = letter;
+
+            LetterLoc curLetterLoc = new LetterLoc(letter, x, y, isBlankLetter);
+            mCurrentWord.Add(curLetterLoc);
+            mUsedLetterIdxs.Add(letterIdx);
+
+            //get score of current turn
+            WordSet wordSet = GetWordList();
+            List<WordLocation> wordList = wordSet.GetFullList();
+            HashSet<WordLocation> illegalWords;
+            int score = GetWordScore(wordList, mCurrentWord, out illegalWords);
+            if (score > 0)
+            {
+                //store this move as one that has scores
+                LetterLoc[] letterArr = new LetterLoc[mCurrentWord.Count];
+                mCurrentWord.CopyTo(letterArr);
+                WordSolution solution = new WordSolution(letterArr, wordList, score);
+                solutions.Add(solution);
+            }
+
+            //see if we should continue down this path
+            if (score < 0
+                && AreIncidentalWordsIllegal(illegalWords, wordSet))
+            {
+                //an incidental word is illegal.  Adding new tiles won't help with this so we are done
+                clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
+                return;
+            }
+            else if (wordSet.PrimaryWord != null
+                && mWordDict.IsDeadWord(wordSet.PrimaryWord.WordText))
+            {
+                //there are no words that contain our primary word, so stop
+                clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
+                return;
+            }
+            //else if (false)
+            //{
+            //    //TODO: evaluate possible words for available tiles and board pieces
+            //}
+
+
+            //Look for next word
+            if (wordSet.Orientation == WordOrientation.SINGLE_TILE)
+            {
+                //go in all 4 directions
+
+                int y_next = NextTileUp(x, y);
+                if (y_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
+                    solutions.AddRange(words);
+                }
+
+                y_next = NextTileDown(x, y);
+                if (y_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
+                    solutions.AddRange(words);
+                }
+
+                int x_next = NextTileLeft(x, y);
+                if (x_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
+                    solutions.AddRange(words);
+                }
+
+                x_next = NextTileRight(x, y);
+                if (x_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
+                    solutions.AddRange(words);
+                }
+            }
+            else if (wordSet.Orientation == WordOrientation.HORIZONTAL)
+            {
+                //go top and bottom
+                int y_next = NextTileUp(x, y);
+                if (y_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
+                    solutions.AddRange(words);
+                }
+
+                y_next = NextTileDown(x, y);
+                if (y_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x, y_next, depth + 1);
+                    solutions.AddRange(words);
+                }
+            }
+            else
+            {
+                //go left and right
+                int x_next = NextTileLeft(x, y);
+                if (x_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
+                    solutions.AddRange(words);
+                }
+
+                x_next = NextTileRight(x, y);
+                if (x_next >= 0)
+                {
+                    List<WordSolution> words = SolutionSearch(x_next, y, depth + 1);
+                    solutions.AddRange(words);
+                }
+            }
+
+            //clear the location we are looking at
+            clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
         }
 
         private bool AreIncidentalWordsIllegal(HashSet<WordLocation> illegalWords, WordSet wordSet)
@@ -344,6 +363,12 @@ namespace wwfSolver
                 int multipliers = 1;
                 foreach (LetterLoc letter in word.Letters)
                 {
+                    //blank letters get no points
+                    if (letter.IsBlankLetter)
+                    {
+                        continue;
+                    }
+
                     int letterScore = GameVals.LETTER_SCORE[letter.Letter];
 
                     //apply letter bonus if this is a played tile
@@ -446,7 +471,7 @@ namespace wwfSolver
                     List<LetterLoc> letters = new List<LetterLoc>();
                     for (int i = minX; i <= maxX; i++)
                     {
-                        letters.Add(new LetterLoc(mBoardLetters[i, letter.Y], i, letter.Y));
+                        letters.Add(new LetterLoc(mBoardLetters[i, letter.Y], i, letter.Y, false));
                     }
 
                     if (orientation == WordOrientation.VERTICAL)
@@ -490,7 +515,7 @@ namespace wwfSolver
                     List<LetterLoc> letters = new List<LetterLoc>();
                     for (int j = minY; j <= maxY; j++)
                     {
-                        letters.Add(new LetterLoc(mBoardLetters[letter.X, j], letter.X, j));
+                        letters.Add(new LetterLoc(mBoardLetters[letter.X, j], letter.X, j, false));
                     }
 
                     if (orientation == WordOrientation.HORIZONTAL)
@@ -778,12 +803,14 @@ namespace wwfSolver
         public readonly char Letter;
         public readonly int X;
         public readonly int Y;
+        public readonly bool IsBlankLetter;
 
-        public LetterLoc(char letter, int x, int y)
+        public LetterLoc(char letter, int x, int y, bool isBlankLetter)
         {
             Letter = letter;
             X = x;
             Y = y;
+            IsBlankLetter = true;
         }
     }
 }

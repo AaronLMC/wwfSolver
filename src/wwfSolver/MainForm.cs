@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Threading;
+using System.IO;
 
 namespace wwfSolver
 {
@@ -27,6 +28,62 @@ namespace wwfSolver
             mWordDict = new WordDict("res/wwfDict.txt");
 
             SetupGameBoard();
+        }
+
+        private Board CurrentBoardConfig
+        {
+            get
+            {
+                char[,] boardLetters = new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
+
+                for (int i = 0; i < GameVals.BOARD_SIZE; i++)
+                {
+                    for (int j = 0; j < GameVals.BOARD_SIZE; j++)
+                    {
+                        Trace.Assert(mGameTextBoxes[i, j].Text != null, "Text box in game is null");
+                        String letter = mGameTextBoxes[i, j].Text;
+                        if (letter.Length == 0)
+                        {
+                            letter = " ";
+                        }
+                        boardLetters[i, j] = letter[0];
+                    }
+                }
+
+                char[] availableLetters = mAvailableLettersTxt.Text.ToCharArray();
+
+                return new Board(boardLetters, availableLetters);
+            }
+
+            set
+            {
+                SetBoardConfig(value);
+                
+            }
+        }
+
+        private void SetBoardConfig(Board board)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetBoardConfig(board);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mAvailableLettersTxt.Text = new String(board.AvailableLetters);
+
+                for (int i = 0; i < GameVals.BOARD_SIZE; i++)
+                {
+                    for (int j = 0; j < GameVals.BOARD_SIZE; j++)
+                    {
+                        mGameTextBoxes[i, j].Text = board.BoardLetters[i, j].ToString();
+                    }
+                }
+            }
         }
 
         private void SetupGameBoard()
@@ -159,25 +216,8 @@ namespace wwfSolver
 
         private void ProcessGoClick()
         {
-            char[,] boardLetters = new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
-
-            for (int i = 0; i < GameVals.BOARD_SIZE; i++)
-            {
-                for (int j = 0; j < GameVals.BOARD_SIZE; j++)
-                {
-                    Trace.Assert(mGameTextBoxes[i, j].Text != null, "Text box in game is null");
-                    String letter = mGameTextBoxes[i, j].Text;
-                    if (letter.Length == 0)
-                    {
-                        letter = " ";
-                    }
-                    boardLetters[i, j] = letter[0];
-                }
-            }
-
-            char[] availableLetters = mAvailableLettersTxt.Text.ToCharArray();
-
-            GameSolver solver = new GameSolver(this, mWordDict, boardLetters, availableLetters);
+            Board board = CurrentBoardConfig;
+            GameSolver solver = new GameSolver(this, mWordDict, board);
             List<WordSolution> solutions = solver.GetSolutions();
             solutions.Sort();
 
@@ -327,5 +367,48 @@ namespace wwfSolver
         }
 
         #endregion
+
+        private void SaveMenuItemOnClick(object sender, EventArgs e)
+        {
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "Game Board|*.wwf";
+                DialogResult result = sfd.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    string targetFilename = sfd.FileName;
+                    if (!targetFilename.EndsWith(".wwf")) targetFilename += ".wwf";
+                    Board board = CurrentBoardConfig;
+                    board.SaveToFile(targetFilename);                    
+                }
+            }
+        }
+
+        private void LoadMenuItemOnClick(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "Game Board (*.wwf)|*.wwf";
+                DialogResult result = ofd.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    string filename = ofd.FileName;
+                    if (!File.Exists(filename))
+                    {
+                        MessageBox.Show("File does not exist");
+                        return;
+                    }
+
+                    Board board = Board.Load(filename);
+                    CurrentBoardConfig = board;
+                }
+            }
+        }
+
+        private void ClearMenuItemOnClick(object sender, EventArgs e)
+        {
+            Board clearBoard = new Board(new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE], new char[0]);
+            CurrentBoardConfig = clearBoard;
+        }
     }   
 }

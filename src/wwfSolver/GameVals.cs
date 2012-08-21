@@ -11,6 +11,8 @@ namespace wwfSolver
         public const int AVAILABLE_LETTER_MAX = 7;
         public const int BOARD_CENTER_LOC = 7;
         public const int BONUS_USED_ALL_TILES = 35;
+        public const char BLANK_TILE = '_';
+        public static readonly char[] ALPHABET = new char[]{'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 
         public static readonly Dictionary<char, int> LETTER_SCORE = new Dictionary<char, int>()
         {
