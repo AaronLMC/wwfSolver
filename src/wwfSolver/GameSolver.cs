@@ -810,7 +810,7 @@ namespace wwfSolver
             Letter = letter;
             X = x;
             Y = y;
-            IsBlankLetter = true;
+            IsBlankLetter = isBlankLetter;
         }
     }
 }
