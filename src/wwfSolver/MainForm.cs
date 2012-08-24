@@ -17,19 +17,33 @@ namespace wwfSolver
         private TextBox[,] mGameTextBoxes = new TextBox[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
         private WordDict mWordDict;
 
-        private const bool _useDemoInput = true;
-
         public MainForm()
         {
             InitializeComponent();
             mAvailableLettersTxt.MaxLength = GameVals.AVAILABLE_LETTER_MAX;
             mAvailableLettersTxt.TextChanged += new EventHandler(OnGameBoardTextChanged);
 
+            mSolutionsListView.ItemSelectionChanged += new ListViewItemSelectionChangedEventHandler(SolutionsListViewOnItemSelectionChanged);
+
             mWordDict = new WordDict("res/wwfDict.txt");
 
             SetupGameBoard();
         }
 
+        private void SolutionsListViewOnItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            ClearWordSolution();
+
+            if (e.Item != null)
+            {
+                WordSolution solution = e.Item.Tag as WordSolution;
+                Trace.Assert(solution != null, "Selected solution did not have a WordSolution object tag");
+                if (solution == null) return;
+
+                SetWordSolution(solution);
+            }
+        }
+                
         private Board CurrentBoardConfig
         {
             get
@@ -74,6 +88,8 @@ namespace wwfSolver
             }
             else
             {
+                mSolutionsListView.Items.Clear();
+
                 mAvailableLettersTxt.Text = new String(board.AvailableLetters);
 
                 for (int i = 0; i < GameVals.BOARD_SIZE; i++)
@@ -88,11 +104,6 @@ namespace wwfSolver
 
         private void SetupGameBoard()
         {
-            if (_useDemoInput)
-            {
-                mAvailableLettersTxt.Text = _demoAvailableLetters;
-            }
-
             for (int i = 0; i < GameVals.BOARD_SIZE; i++)
             {
                 FlowLayoutPanel rowPanel = new FlowLayoutPanel();
@@ -107,7 +118,7 @@ namespace wwfSolver
                     textBox.TextAlign = HorizontalAlignment.Center;
                     textBox.TextChanged += new EventHandler(OnGameBoardTextChanged);
                     textBox.KeyUp += new KeyEventHandler(textBox_KeyUp);
-                    textBox.Tag = new int[] { i, j };
+                    textBox.Tag = new SpaceInfo(i, j);
 
                     if (i == GameVals.BOARD_CENTER_LOC
                         && j == GameVals.BOARD_CENTER_LOC)
@@ -117,11 +128,6 @@ namespace wwfSolver
 
                     mGameTextBoxes[i,j] = textBox;
                     rowPanel.Controls.Add(textBox);
-
-                    if (_useDemoInput)
-                    {
-                        textBox.Text = _demoGameBoard[i, j];
-                    }
 
                     rowPanel.Height = textBox.Height + 3;
                 }
@@ -134,7 +140,7 @@ namespace wwfSolver
         {
             
                 if (sender is TextBox
-                    && ((TextBox)sender).Tag is int[])
+                    && ((TextBox)sender).Tag is SpaceInfo)
                 {
                     if (e.KeyCode == Keys.Up
                     || e.KeyCode == Keys.Down
@@ -142,14 +148,9 @@ namespace wwfSolver
                     || e.KeyCode == Keys.Right)
                     {
                         TextBox txtBox = sender as TextBox;
-                        int[] location = txtBox.Tag as int[];
-                        if (location.Length != 2)
-                        {
-                            Trace.Fail("Textbox did not have tag coordinates");
-                            return;
-                        }
-                        int x = location[0];
-                        int y = location[1];
+                        SpaceInfo info = txtBox.Tag as SpaceInfo;
+                        int x = info.Location.X;
+                        int y = info.Location.Y;
 
                         TextBox selectedBox = null;
 
@@ -208,6 +209,9 @@ namespace wwfSolver
 
         private void GoBtnOnClick(object sender, EventArgs e)
         {
+            ClearWordSolution();
+            mSolutionsListView.Items.Clear();
+
             SetGoBtnEnabled(false);
 
             Thread goThread = new Thread(ProcessGoClick);
@@ -221,12 +225,35 @@ namespace wwfSolver
             List<WordSolution> solutions = solver.GetSolutions();
             solutions.Sort();
 
-            foreach (WordSolution solution in solutions)
-            {
-                Console.Out.WriteLine("Solution: " + solution);
-            }
+            SetSolutions(solutions);
 
             SetGoBtnEnabled(true);
+        }
+
+        private void SetSolutions(List<WordSolution> solutions)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetSolutions(solutions);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mSolutionsListView.Items.Clear();
+
+                foreach (WordSolution solution in solutions)
+                {
+                    ListViewItem item = new ListViewItem( new string[] {
+                        solution.Score.ToString(),
+                        solution.Letters.Length.ToString(),
+                        solution.getWordList()});
+                    item.Tag = solution;
+                    mSolutionsListView.Items.Add(item);
+                }
+            }
         }
 
         private void SetGoBtnEnabled(bool enabled)
@@ -245,82 +272,6 @@ namespace wwfSolver
             }
         }
 
-        private String _demoAvailableLetters = "";
-        private String[,] _demoGameBoard = {
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-            {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        };
-
-        //private String _demoAvailableLetters = "DGYODDT";
-        //private String[,] _demoGameBoard = {
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "T"},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "S", "I"},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", "N", " ", " ", " ", "U", "P"},
-        //    {" ", " ", " ", " ", " ", " ", " ", "B", "R", "U", "I", "T", " ", "R", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", "O", " ", "M", " ", " ", " ", "E", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", "N", " ", "B", "R", "A", "W", "L", "S"},
-        //    {" ", " ", " ", " ", "L", " ", "H", "E", "H", "S", " ", " ", " ", "Y", "O"},
-        //    {" ", " ", " ", "Z", "O", "O", "I", "D", " ", " ", " ", " ", "N", " ", "C"},
-        //    {" ", " ", " ", " ", "P", " ", "D", " ", " ", "R", " ", "L", "I", "N", "K"},
-        //    {" ", " ", " ", " ", " ", "V", "E", "G", " ", "E", " ", "E", "X", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", "I", "F", "S", " ", "V", " ", " ", " "},
-        //};
-
-        //private String _demoAvailableLetters = "II";
-        //private String[,] _demoGameBoard = {
-        //    {" ", " ", " ", " ", " ", " ", " ", "H", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", "O", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", "E", " ", " ", " ", " ", " ", " ", " "},
-        //    {"S", " ", " ", "C", " ", "S", "A", "D", " ", " ", " ", "N", " ", " ", "V"},
-        //    {"H", " ", "W", "H", "E", "T", " ", " ", " ", " ", " ", "O", " ", "H", "E"},
-        //    {"Y", "O", " ", "A", " ", "U", " ", " ", " ", "C", "L", "O", "V", "E", "R"},
-        //    {" ", "U", " ", "R", " ", "B", "O", "B", " ", "U", " ", "D", " ", "A", "M"},
-        //    {" ", "T", " ", "K", " ", " ", "F", "E", "E", "D", " ", "L", " ", "T", "I"},
-        //    {"J", "A", "R", "S", " ", " ", " ", "N", " ", " ", " ", "E", " ", "I", "N"},
-        //    {" ", "G", " ", " ", " ", " ", "G", "E", "E", "Z", " ", " ", " ", "N", " "},
-        //    {"Y", "E", "T", "I", " ", " ", " ", "F", "L", "A", "W", " ", "A", "G", "O"},
-        //    {"E", "S", " ", "D", "O", " ", "L", "I", "D", " ", " ", " ", "N", " ", "P"},
-        //    {"T", " ", " ", "I", " ", " ", " ", "T", " ", " ", "Q", "A", "T", " ", "E"},
-        //    {" ", " ", " ", "O", " ", " ", " ", "S", "A", "X", " ", " ", " ", " ", "R"},
-        //    {" ", " ", " ", "M", "I", "R", "E", " ", " ", "U", "P", "O", "N", " ", "A"},
-        //};
-
-        //private String _demoAvailableLetters = "THDACQR";
-        //private String[,] _demoGameBoard = {
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", "E", "S", "T", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "C", " "},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "Z", "O", "O", "N"},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "I", " ", "O", " "},
-        //    {" ", " ", " ", " ", " ", " ", "D", "A", "U", "B", " ", "P", "A", "L", "L"},
-        //    {" ", " ", " ", " ", " ", " ", " ", " ", " ", "E", "M", " ", " ", " ", "A"},
-        //    {" ", " ", " ", " ", " ", " ", " ", "S", "N", "E", "E", "R", "S", " ", "R"},
-        //    {" ", " ", " ", " ", " ", " ", " ", "W", "E", "R", "E", " ", "I", "N", "K"},
-        //    {" ", " ", " ", " ", " ", " ", " ", "E", "T", " ", "D", " ", "T", "O", " "},
-        //    {" ", " ", " ", " ", " ", " ", "V", "A", "S", "E", "S", " ", "H", "E", "R"},
-        //    {" ", "C", " ", " ", " ", "B", " ", "T", " ", "V", " ", " ", " ", "L", "I"},
-        //    {" ", "H", " ", "T", "W", "I", "G", "S", " ", "E", "Y", "E", " ", " ", "D"},
-        //    {" ", "I", " ", "O", " ", "G", " ", " ", " ", "N", " ", " ", "F", "I", "E"},
-        //    {" ", "P", "R", "Y", " ", " ", " ", " ", " ", "T", "U", "X", " ", " ", " "}
-        //};
-
         #region FrontEndInterface Members
 
         public void SetSearchStartLocation(int x, int y)
@@ -334,7 +285,7 @@ namespace wwfSolver
             SetLocationColor(x, y, Color.Yellow);
         }
 
-        public void ClearSearchLocation(int x, int y)
+        public void SetLocationColorToDefault(int x, int y)
         {
             SetLocationColor(x, y, Color.White);
         }
@@ -358,12 +309,54 @@ namespace wwfSolver
 
         public void SetWordSolution(WordSolution solution)
         {
-            throw new NotImplementedException();
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetWordSolution(solution);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                foreach (LetterLoc letter in solution.Letters)
+                {
+                    TextBox txtBox = mGameTextBoxes[letter.X, letter.Y];
+
+                    txtBox.Text = letter.Letter.ToString() + (letter.IsBlankLetter ? "*" : "");
+                    (txtBox.Tag as SpaceInfo).IsSolutionTile = true;
+
+                    SetLocationColor(letter.X, letter.Y, Color.LightCoral);
+                }
+            }
         }
 
         public void ClearWordSolution()
         {
-            throw new NotImplementedException();
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    ClearWordSolution();
+                };
+                Invoke(del);
+            }
+            else
+            {
+                for (int i = 0; i < GameVals.BOARD_SIZE; i++)
+                {
+                    for (int j = 0; j < GameVals.BOARD_SIZE; j++)
+                    {
+                        SpaceInfo info = mGameTextBoxes[i, j].Tag as SpaceInfo;
+                        if (info.IsSolutionTile)
+                        {
+                            mGameTextBoxes[i, j].Text = " ";                            
+                            SetLocationColorToDefault(i, j);
+                            info.IsSolutionTile = false;
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
@@ -409,6 +402,84 @@ namespace wwfSolver
         {
             Board clearBoard = new Board(new char[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE], new char[0]);
             CurrentBoardConfig = clearBoard;
+
+            mSolutionsListView.Items.Clear();
         }
-    }   
+
+        #region FrontEndInterface Members
+
+
+        public void SetNumWordsEvaluated(int numWords)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetNumWordsEvaluated(numWords);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mWordsEvaluatedLbl.Text = "Words Evaluated: " + numWords.ToString("#,##0");
+            }
+        }
+
+        public void SetNumSolutionsFound(int numSolutions)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetNumSolutionsFound(numSolutions);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mSolutionCountLbl.Text = "Number of Solutions: " + numSolutions.ToString("#,##0");
+            }
+        }
+
+        public void SetHighestScoreFound(int maxScore)
+        {
+            if (this.InvokeRequired)
+            {
+                MethodInvoker del = delegate
+                {
+                    SetHighestScoreFound(maxScore);
+                };
+                Invoke(del);
+            }
+            else
+            {
+                mHighestScoreLbl.Text = "Highest Score: " + maxScore.ToString("#,##0");
+            }
+        }
+
+        #endregion
+    }
+
+    class SpaceInfo
+    {
+        private Point mLocation;
+        private bool mIsSolutionTile;
+
+        public SpaceInfo(int x, int y)
+        {
+            mLocation = new Point(x, y);
+            mIsSolutionTile = false;
+        }
+
+        public Point Location
+        {
+            get { return mLocation; }
+        }
+
+        public bool IsSolutionTile
+        {
+            get { return mIsSolutionTile; }
+            set { mIsSolutionTile = value; }
+        }
+    }
 }

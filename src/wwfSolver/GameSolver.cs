@@ -11,31 +11,33 @@ namespace wwfSolver
     {
         void SetSearchStartLocation(int x, int y);
         void SetSearchRecurLocation(int x, int y);
-        void ClearSearchLocation(int x, int y);
-
-        void SetWordSolution(WordSolution solution);
-        void ClearWordSolution();
+        void SetLocationColorToDefault(int x, int y);
+        void SetNumWordsEvaluated(int numWords);
+        void SetNumSolutionsFound(int numSolutions);
+        void SetHighestScoreFound(int maxScore);
     }
 
     public class GameSolver
     {
         private FrontEndInterface mFrontEnd;
         private WordDict mWordDict;
-        private char[,] mBoardLetters;
+        private CharInfo[,] mBoardLetters;
         private char[] mAvailableLetters;
         private List<int> mUsedLetterIdxs = new List<int>();
         private List<LetterLoc> mCurrentWord = new List<LetterLoc>();
+        private int mMaxScoreFound = 0;
 
         public GameSolver(FrontEndInterface frontEnd, WordDict wordDict, Board boardConfig)
         {
             mFrontEnd = frontEnd;
             mWordDict = wordDict;
-            mBoardLetters = boardConfig.BoardLetters;
+            mBoardLetters = CharInfo.ConvertBoardToCharInfoArr(boardConfig.BoardLetters);
             mAvailableLetters = boardConfig.AvailableLetters;
         }
 
         public List<WordSolution> GetSolutions()
         {
+            mMaxScoreFound = 0;
             List<WordSolution> solutions = new List<WordSolution>();
 
             //if the board is empty, find best word to place at center tile
@@ -60,7 +62,7 @@ namespace wwfSolver
                 //look for solutions starting at center
                 mFrontEnd.SetSearchStartLocation(GameVals.BOARD_CENTER_LOC, GameVals.BOARD_CENTER_LOC);
                 List<WordSolution> words = SolutionSearch(GameVals.BOARD_CENTER_LOC, GameVals.BOARD_CENTER_LOC, 0);
-                mFrontEnd.ClearSearchLocation(GameVals.BOARD_CENTER_LOC, GameVals.BOARD_CENTER_LOC);
+                mFrontEnd.SetLocationColorToDefault(GameVals.BOARD_CENTER_LOC, GameVals.BOARD_CENTER_LOC);
 
                 foreach (WordSolution w in words)
                 {
@@ -90,7 +92,7 @@ namespace wwfSolver
 
                         mFrontEnd.SetSearchStartLocation(i, j);                        
                         List<WordSolution> words = SolutionSearch(i, j, 0);
-                        mFrontEnd.ClearSearchLocation(i, j);
+                        mFrontEnd.SetLocationColorToDefault(i, j);
 
                         foreach (WordSolution w in words)
                         {
@@ -103,6 +105,9 @@ namespace wwfSolver
                 }
             }
 
+            //TODO: report this value as solutions are found
+            mFrontEnd.SetNumSolutionsFound(solutions.Count);
+
             return solutions;
         }
 
@@ -111,6 +116,12 @@ namespace wwfSolver
             if (depth > 0 && depth <= 3)
             {
                 mFrontEnd.SetSearchRecurLocation(x, y);
+
+                if (depth <= 2)
+                {
+                    int numWordsEvaluated = mWordDict.GetNumWordsEvaluated();
+                    mFrontEnd.SetNumWordsEvaluated(numWordsEvaluated);
+                }
             }
 
             List<WordSolution> solutions = new List<WordSolution>();            
@@ -142,14 +153,14 @@ namespace wwfSolver
 
             }
 
-            mFrontEnd.ClearSearchLocation(x, y);
+            mFrontEnd.SetLocationColorToDefault(x, y);
 
             return solutions;
         }
 
         private void _evaluateLetter(char letter, bool isBlankLetter, int letterIdx, int x, int y, List<WordSolution> solutions, int depth)
         {
-            mBoardLetters[x, y] = letter;
+            mBoardLetters[x, y] = new CharInfo(letter, isBlankLetter);
 
             LetterLoc curLetterLoc = new LetterLoc(letter, x, y, isBlankLetter);
             mCurrentWord.Add(curLetterLoc);
@@ -184,11 +195,6 @@ namespace wwfSolver
                 clearCandidateLetterFromBoard(x, y, letterIdx, curLetterLoc);
                 return;
             }
-            //else if (false)
-            //{
-            //    //TODO: evaluate possible words for available tiles and board pieces
-            //}
-
 
             //Look for next word
             if (wordSet.Orientation == WordOrientation.SINGLE_TILE)
@@ -277,7 +283,7 @@ namespace wwfSolver
 
         private void clearCandidateLetterFromBoard(int x, int y, int letterIdx, LetterLoc letterLoc)
         {
-            mBoardLetters[x, y] = ' ';
+            mBoardLetters[x, y] = new CharInfo();
             mUsedLetterIdxs.Remove(letterIdx);
             mCurrentWord.Remove(letterLoc);
         }
@@ -404,6 +410,12 @@ namespace wwfSolver
                 score += GameVals.BONUS_USED_ALL_TILES;
             }
 
+            if (score > mMaxScoreFound)
+            {
+                mMaxScoreFound = score;
+                mFrontEnd.SetHighestScoreFound(mMaxScoreFound);
+            }
+
             return score;
         }
 
@@ -435,7 +447,7 @@ namespace wwfSolver
                 int minX = initX;
                 for (int i = initX; i >= 0; i--)
                 {
-                    if (mBoardLetters[i, letter.Y] == ' ')
+                    if (mBoardLetters[i, letter.Y].IsEmptySpace())
                     {
                         break;
                     }
@@ -448,7 +460,7 @@ namespace wwfSolver
                 int maxX = initX;
                 for (int i = initX; i < GameVals.BOARD_SIZE; i++)
                 {
-                    if (mBoardLetters[i, letter.Y] == ' ')
+                    if (mBoardLetters[i, letter.Y].IsEmptySpace())
                     {
                         break;
                     }
@@ -471,7 +483,7 @@ namespace wwfSolver
                     List<LetterLoc> letters = new List<LetterLoc>();
                     for (int i = minX; i <= maxX; i++)
                     {
-                        letters.Add(new LetterLoc(mBoardLetters[i, letter.Y], i, letter.Y, false));
+                        letters.Add(mBoardLetters[i, letter.Y].GenLetterLoc(i, letter.Y));
                     }
 
                     if (orientation == WordOrientation.VERTICAL)
@@ -485,7 +497,7 @@ namespace wwfSolver
                 int minY = initY;
                 for (int j = initY; j >= 0; j--)
                 {
-                    if (mBoardLetters[letter.X, j] == ' ')
+                    if (mBoardLetters[letter.X, j].IsEmptySpace())
                     {
                         break;
                     }
@@ -498,7 +510,7 @@ namespace wwfSolver
                 int maxY = initY;
                 for (int j = initY; j < GameVals.BOARD_SIZE; j++)
                 {
-                    if (mBoardLetters[letter.X, j] == ' ')
+                    if (mBoardLetters[letter.X, j].IsEmptySpace())
                     {
                         break;
                     }
@@ -515,7 +527,7 @@ namespace wwfSolver
                     List<LetterLoc> letters = new List<LetterLoc>();
                     for (int j = minY; j <= maxY; j++)
                     {
-                        letters.Add(new LetterLoc(mBoardLetters[letter.X, j], letter.X, j, false));
+                        letters.Add(mBoardLetters[letter.X, j].GenLetterLoc(letter.X, j));
                     }
 
                     if (orientation == WordOrientation.HORIZONTAL)
@@ -597,7 +609,7 @@ namespace wwfSolver
         private bool LocationContainsLetter(int x, int y)
         {
             //look at board location
-            if (mBoardLetters[x, y] != ' ')
+            if (!mBoardLetters[x, y].IsEmptySpace())
             {
                 return true;
             }
@@ -617,7 +629,7 @@ namespace wwfSolver
         {
             mLetters = letterList;
             mLegalWords = legalWords;
-            mScore = score;
+            mScore = score;            
         }
 
         public LetterLoc[] Letters
@@ -635,7 +647,7 @@ namespace wwfSolver
             get { return mScore; }
         }
 
-        public override string ToString()
+        public string getWordList()
         {
             string wordList = "";
             for (int i = 0; i < mLegalWords.Count; i++)
@@ -647,7 +659,12 @@ namespace wwfSolver
                     wordList += ", ";
                 }
             }
+            return wordList;
+        }
 
+        public override string ToString()
+        {
+            string wordList = getWordList();
             return string.Format("Score = {0}, Words = {1}, NumTiles = {2}", mScore, wordList, mLetters.Length);
         }
 
@@ -798,7 +815,8 @@ namespace wwfSolver
         }
     }
 
-    public struct LetterLoc
+    [DebuggerDisplay("{ToString()}")]
+    public class LetterLoc
     {
         public readonly char Letter;
         public readonly int X;
@@ -811,6 +829,74 @@ namespace wwfSolver
             X = x;
             Y = y;
             IsBlankLetter = isBlankLetter;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is LetterLoc)
+            {
+                LetterLoc objLetterLoc = obj as LetterLoc;
+
+                return (Letter == objLetterLoc.Letter
+                        && X == objLetterLoc.X
+                        && Y == objLetterLoc.Y
+                        && IsBlankLetter == objLetterLoc.IsBlankLetter);
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+            
+        }
+
+        public override string ToString()
+        {            
+            return string.Format("{0}{1}[{2},{3}]", Letter, (IsBlankLetter ? "*" : ""), X, Y);
+        }
+    }
+
+    class CharInfo
+    {
+        public const char EMPTY_SPACE = ' ';
+
+        public readonly char Letter;
+        public readonly bool IsBlankLetter;
+
+        public CharInfo(char letter, bool isBlankLetter)
+        {
+            Letter = letter;
+            IsBlankLetter = isBlankLetter;
+        }
+
+        public CharInfo()
+        {
+            Letter = EMPTY_SPACE;
+            IsBlankLetter = false;
+        }
+
+        public bool IsEmptySpace()
+        {
+            return (Letter == EMPTY_SPACE);
+        }
+
+        public LetterLoc GenLetterLoc(int x, int y)
+        {
+            return new LetterLoc(Letter, x, y, IsBlankLetter);
+        }
+
+        public static CharInfo[,] ConvertBoardToCharInfoArr(char[,] board)
+        {
+            CharInfo[,] infoBoard = new CharInfo[GameVals.BOARD_SIZE, GameVals.BOARD_SIZE];
+
+            for (int i = 0; i < GameVals.BOARD_SIZE; i++)
+            {
+                for (int j = 0; j < GameVals.BOARD_SIZE; j++)
+                {
+                    infoBoard[i, j] = new CharInfo(board[i, j], false);
+                }
+            }
+
+            return infoBoard;            
         }
     }
 }

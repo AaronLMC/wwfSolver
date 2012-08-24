@@ -109,5 +109,10 @@ namespace wwfSolver
             mDeadWords.Add(testWord);
             return true;
         }
+
+        public int GetNumWordsEvaluated()
+        {
+            return mLiveWords.Count + mDeadWords.Count;
+        }
     }
 }
